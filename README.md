@@ -50,7 +50,7 @@ dvc repro
 
 If you want to skip feature extraction and instead use the provided features as they are, commit them to dvc:
 ```console
-dvc commit features
+dvc commit -d features audeep_export
 ```
 and then run `dvc repro` as above.
 
