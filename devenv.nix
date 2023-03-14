@@ -10,7 +10,7 @@ let
   };
 in
 rec {
-  name = "ComParE23";
+  name = "compare23";
 
   packages = [
     pkgs.eihw-packages.opensmile
