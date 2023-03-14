@@ -1,0 +1,116 @@
+stages:
+  preprocessing:
+    foreach:
+      - wav
+    do:
+      cmd: python src/preprocessing/wav.py
+      deps:
+        - ./data/raw/${item}
+      params:
+        - preprocessing.${item}
+      outs:
+        - ./data/${item}
+  features:
+    foreach:
+      - opensmile
+      - deepspectrum
+    do:
+      cmd: python src/features/${item}.py
+      deps:
+        - ./data/wav
+        - ./src/features/${item}.py
+      params:
+        - ${item}
+      outs:
+        - ./data/features/${item}
+  svm:
+    foreach:
+      - opensmile
+      - deepspectrum
+      - audeep
+    do:
+      cmd: python src/ml/svm.py ${item}
+      deps:
+        - ./data/features/${item}
+        - ./data/lab
+        - ./src/ml/svm.py
+      params:
+        - target
+      outs:
+        - ./results/svm/${item}
+  cm:
+    cmd: python src/visualisations/cm.py
+    deps:
+      - ./results
+      - ./src/visualisations/cm.py
+    outs:
+      - ./visualisations/cms:
+          cache: false
+  audeep_spectrograms:
+    cmd: python src/features/audeep/spectrograms.py
+    deps:
+      - ./data/wav
+      - ./src/features/audeep/spectrograms.py
+    params:
+      - audeep.spectrograms
+    outs:
+      - ./audeep_workspace/spectrograms
+  audeep_autoencoder:
+    cmd: python src/features/audeep/autoencoder.py
+    deps:
+      - ./audeep_workspace/spectrograms
+      - ./src/features/audeep/autoencoder.py
+    params:
+      - audeep.autoencoder
+    outs:
+      - ./audeep_workspace/autoencoder
+  audeep_representations:
+    cmd: python src/features/audeep/representations.py
+    deps:
+      - ./audeep_workspace/autoencoder
+      - ./src/features/audeep/representations.py
+    outs:
+      - ./audeep_workspace/representations
+  audeep_export:
+    cmd: python src/features/audeep/export.py
+    params:
+      - audeep.export
+    deps:
+      - ./audeep_workspace/representations
+      - ./src/features/audeep/export.py
+    outs:
+      - ./data/features/audeep
+  metrics:
+    foreach:
+      - wav2vec
+      - svm/opensmile
+      - fusion
+    do:
+      cmd: python src/ml/metrics.py ${item}
+      deps:
+        - results/${item}
+        - ./src/ml/metrics.py
+      metrics:
+        - metrics/${item}/metrics.yaml
+  fusion:
+    cmd: python src/late_fusion.py
+    deps:
+      - results/svm/
+      - ./src/late_fusion.py
+    params:
+      - fusion
+    outs:
+      - results/fusion/
+  wav2vec:
+     cmd: python src/ml/wav2vec.py
+     deps:
+       - ./data/wav
+       - ./data/lab
+       - ./src/ml/wav2vec.py
+     params:
+       - wav2vec
+       - target
+     outs:
+       - results/wav2vec
+       - ./tb_logs/wav2vec:
+             persist: True
