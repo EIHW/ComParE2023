@@ -31,7 +31,8 @@ Just run `devenv shell` after you followed the [installation instructions](https
 ### Docker
 Run the docker container and mount the repository:
 ```console
-docker run -it v /path/to/ComParE2023:/ComParE2023 mauricege/compare23-shell
+docker run -it -v /path/to/ComParE2023:/ComParE2023 mauricege/compare23-shell
+cd ComParE2023
 ```
 
 ## Reproducing the baseline
