@@ -1,5 +1,5 @@
 # Parameters for the experiment should be defined here and the contents read by the respective scripts.
-target: request
+target: complaint
 deepspectrum:
   extractionNetwork: densenet169
   plotMode: mel
