@@ -14,9 +14,10 @@ opensmile:
 
 fusion:
   to_fuse:
-  - audeep
-  - deepspectrum
-  - opensmile
+  - svm/audeep
+  - svm/deepspectrum
+  - svm/opensmile
+  - wav2vec
 
 audeep:
   spectrograms:

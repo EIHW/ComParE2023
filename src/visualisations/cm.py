@@ -4,9 +4,12 @@ from os import makedirs
 from posixpath import dirname, join, relpath
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, recall_score
 from glob import glob
 
 def cm_analysis(y_true, y_pred, filename, labels, ymap=None, figsize=(10,10)):
@@ -49,15 +52,20 @@ def cm_analysis(y_true, y_pred, filename, labels, ymap=None, figsize=(10,10)):
     cm.index.name = 'Actual'
     cm.columns.name = 'Predicted'
     _, ax = plt.subplots(figsize=figsize)
-    sns.heatmap(cm, cmap="bone_r", annot=annot, fmt='', ax=ax, vmax=100, square=True, cbar=False)
+    sns.heatmap(cm, cmap="bone_r", annot=annot, fmt='', ax=ax, vmin=0, vmax=100, square=True, cbar=False)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right")
+    ax.set_yticklabels(ax.get_yticklabels(), rotation=45, va="top")
+    ax.set_title(f"UAR = {recall_score(y_true, y_pred, average='macro'):.1%}")
     plt.tight_layout()
     plt.savefig(f"{filename}.pdf")
-    plt.savefig(f"{filename}.png")
+    plt.savefig(f"{filename}.png", dpi=600)
 
 if __name__=="__main__":
+    
     result_dir = f"./results"
     predictions = glob(f"{result_dir}/**/predictions*.csv", recursive=True)
     cm_dir = f"./visualisations/cms/"
+    height = 5
     for p in predictions:
         pred_df = pd.read_csv(p)
         y = pred_df.true.values
@@ -71,4 +79,4 @@ if __name__=="__main__":
         else:
             partition = ""
         if len(set(pred_df.true.values)) > 1:
-            cm_analysis(y, preds, join(_cm_dir, f"cm{partition}"), sorted(set(y)))
+            cm_analysis(y, preds, join(_cm_dir, f"cm{partition}"), sorted(set(y)), figsize=(height,height))

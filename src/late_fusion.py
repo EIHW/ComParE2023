@@ -20,7 +20,7 @@ if __name__ == "__main__":
         params = params["fusion"]
 
     result_dirs = sorted(
-        [os.path.join("./results/svm", f) for f in params["to_fuse"]]
+        [os.path.join("./results", f) for f in params["to_fuse"]]
     )
 
     os.makedirs(FUSION_RESULTS_PATH, exist_ok=True)

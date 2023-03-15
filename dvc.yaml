@@ -84,6 +84,8 @@ stages:
     foreach:
       - wav2vec
       - svm/opensmile
+      - svm/deepspectrum
+      - svm/audeep
       - fusion
     do:
       cmd: python src/ml/metrics.py ${item}
