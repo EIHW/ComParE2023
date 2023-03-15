@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.metrics import recall_score, confusion_matrix, classification_report
 from ci import CI
 from os import makedirs
-from os.path import join
+from os.path import join, isfile
 
 
 def compute_metrics(devel_df, test_df):
@@ -57,12 +57,22 @@ def compute_metrics(devel_df, test_df):
 
 
 if __name__ == "__main__":
+    with open("params.yaml") as f:
+        target = yaml.load(f, Loader=yaml.FullLoader)["target"]
     experiment = sys.argv[1]
     result_folder = f"./results/{experiment}"
     metrics_folder = f"./metrics/{experiment}"
+    devel_labels = pd.read_csv("./data/lab/devel.csv").rename(columns={target: "true"})
+    if isfile("./data/lab/test.unmasked.csv"):
+        test_labels = pd.read_csv("./data/lab/test.unmasked.csv")
+    else:
+        test_labels = pd.read_csv("./data/lab/test.csv")
+    test_labels.rename(columns={target: "true"}, inplace=True)
+    devel_preds = pd.read_csv(join(result_folder, "predictions.devel.csv"))[["filename", "prediction"]]
+    test_preds = pd.read_csv(join(result_folder, "predictions.test.csv"))[["filename", "prediction"]]
 
-    devel_df = pd.read_csv(join(result_folder, "predictions.devel.csv"))
-    test_df = pd.read_csv(join(result_folder, "predictions.test.csv"))
+    devel_df = pd.merge(devel_preds, devel_labels, on="filename")
+    test_df = pd.merge(test_preds, test_labels, on="filename")
 
     metrics = compute_metrics(devel_df, test_df)
 

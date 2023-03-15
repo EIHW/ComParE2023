@@ -32,7 +32,9 @@ stages:
       cmd: python src/ml/svm.py ${item}
       deps:
         - ./data/features/${item}
-        - ./data/lab
+        - ./data/lab/train.csv
+        - ./data/lab/devel.csv
+        - ./data/lab/test.csv
         - ./src/ml/svm.py
       params:
         - target
@@ -92,6 +94,7 @@ stages:
       deps:
         - results/${item}
         - ./src/ml/metrics.py
+        - ./data/lab
       metrics:
         - metrics/${item}/metrics.yaml
   fusion:
@@ -107,7 +110,9 @@ stages:
      cmd: python src/ml/wav2vec.py
      deps:
        - ./data/wav
-       - ./data/lab
+       - ./data/lab/train.csv
+       - ./data/lab/devel.csv
+       - ./data/lab/test.csv
        - ./src/ml/wav2vec.py
      params:
        - wav2vec

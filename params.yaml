@@ -1,5 +1,5 @@
 # Parameters for the experiment should be defined here and the contents read by the respective scripts.
-target: complaint
+target: request
 deepspectrum:
   extractionNetwork: densenet169
   plotMode: mel
@@ -49,7 +49,7 @@ wav2vec:
   pooling: mean
   group: all
   model: jonatasgrosman/wav2vec2-large-xlsr-53-english
-  epochs: 15      
+  epochs: 15 
 
 preprocessing:
   wav:

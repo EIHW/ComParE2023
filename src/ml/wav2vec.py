@@ -78,7 +78,6 @@ class DataCollatorCTCWithPadding:
         input_features = [
             {"input_values": feature["input_values"]} for feature in features
         ]
-        label_features = [feature["labels"] for feature in features]
 
         # d_type = torch.long if isinstance(label_features[0], int) else torch.float
         d_type = torch.long
@@ -91,8 +90,9 @@ class DataCollatorCTCWithPadding:
             pad_to_multiple_of=self.pad_to_multiple_of,
             return_tensors="pt",
         )
-
-        batch["labels"] = torch.tensor(label_features, dtype=d_type)
+        if "labels" in features[0]:
+            label_features = [feature["labels"] for feature in features]
+            batch["labels"] = torch.tensor(label_features, dtype=d_type)
 
         return batch
 
@@ -106,12 +106,13 @@ def speech_file_to_array_fn(path):
 
 def preprocess_function(examples):
     speech_list = [speech_file_to_array_fn(path) for path in examples["filename_full"]]
-    target_list = [
-        int(label) for label in examples["label"]
-    ]  # Do any preprocessing on your float/integer data
-
     result = processor(speech_list, sampling_rate=target_sampling_rate)
-    result["labels"] = list(target_list)
+    
+    if "label" in examples:
+        target_list = [
+            int(label) for label in examples["label"]
+        ]  # Do any preprocessing on your float/integer data
+        result["labels"] = list(target_list)
 
     return result
 
@@ -285,8 +286,8 @@ if __name__ == "__main__":
     label_encoder = LabelEncoder()
     df_train["label"] = label_encoder.fit_transform(df_train[target])
     df_dev["label"] = label_encoder.transform(df_dev[target])
-    if len(set(df_test[target])) > 1:
-        df_test["label"] = label_encoder.transform(df_test[target])
+    # if len(set(df_test[target])) > 1:
+    #     df_test["label"] = label_encoder.transform(df_test[target])
 
     train_dataset = Dataset.from_pandas(df_train)
     dev_dataset = Dataset.from_pandas(df_dev)
@@ -381,11 +382,11 @@ if __name__ == "__main__":
             "prediction": label_encoder.inverse_transform(
                 np.argmax(test_predictions.predictions.squeeze(), axis=-1)
             ),
-            "true": label_encoder.inverse_transform(
-                test_predictions.label_ids.squeeze()
-            )
-            if len(set(test_predictions.label_ids)) > 1
-            else ["?"] * test_predictions.predictions.shape[0],
+            # "true": label_encoder.inverse_transform(
+            #     test_predictions.label_ids.squeeze()
+            # )
+            # if len(set(test_predictions.label_ids)) > 1
+            # else ["?"] * test_predictions.predictions.shape[0],
         }
     )
     test_df.to_csv(join(result_dir, "predictions.test.csv"), index=False)
