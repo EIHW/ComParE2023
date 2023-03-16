@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "ComParE2023"
+name = "ComParE2023-HP-C"
 version = "0.1.0"
 description = "Environment for ComParE2023 challenge baselines."
-authors = ["maurice.gerczuk@uni-a.de", "shahin.amiriparian@uni-a.de"]
+authors = ["alice@hume.ai"]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4"
@@ -21,10 +21,10 @@ librosa = "^0.9.2"
 datasets = "^2.8.0"
 evaluate = "^0.4.0"
 pycm = "^3.7"
+audmetric = "^1.1.6"
 
 [tool.poetry.dev-dependencies]
 black = "^22.6.0"
-flake8 = "^5.0.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

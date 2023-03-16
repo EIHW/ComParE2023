@@ -1,0 +1,56 @@
+# Parameters for the experiment should be defined here and the contents read by the respective scripts.
+deepspectrum:
+  extractionNetwork: resnet50
+  plotMode: mel
+  melBands: 128
+  colourMap: viridis
+  window_size:
+  hop_size:
+
+opensmile:
+  featureSet: compare16/ComParE_2016.conf
+
+fusion:
+  to_fuse:
+  - audeep
+  - deepspectrum
+  - opensmile
+  - wav2vec
+
+audeep:
+  spectrograms:
+    window_width: 0.08
+    window_overlap: 0.04
+    mel_bands: 128
+    fixed_length: 3
+    clip_below_values:
+    - -30
+    - -45
+    - -60
+    - -75
+  autoencoder:
+    num_layers: 2
+    num_units: 256
+    cell: GRU
+    bidirectional_encoder: false
+    bidirectional_decoder: true
+    num_epochs: 64
+    batch_size: 512
+    learning_rate: 0.001
+    keep_prob: 0.8
+  export: fused # can be either "fused" or any of the clip_below_values
+
+
+wav2vec:
+  freezeExtractor: true
+  freezeTransformer: false
+  pooling: mean
+  group: all
+  model: audeering/wav2vec2-large-robust-12-ft-emotion-msp-dim
+  epochs: 15      
+
+preprocessing:
+  wav:
+
+ml:
+  type: regression
