@@ -1,4 +1,4 @@
-.direnv*
-.devenv*
-slurm/out
-__pycache__
+data/
+metrics/ 
+results/
+cache/

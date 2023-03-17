@@ -1,0 +1,42 @@
+stages:
+  svm:
+    foreach:
+      # - opensmile
+      - wav2vec
+      # - deepspectrum
+      # - audeep
+    do:
+      cmd: python src/ml/svm.py ${item}
+      deps:
+        - ./data/features/${item}
+        - ./data/lab
+        - ./src/ml/svm.py
+      params:
+        - ml
+      outs:
+        - ./results/svm/${item}
+  metrics:
+    foreach:
+      - svm/wav2vec
+      # - svm/opensmile
+      # - svm/deepspectrum
+      # - svm/audeep
+      # - fusion
+    do:
+      cmd: python src/ml/metrics.py ${item}
+      deps:
+        - results/${item}
+        - src/ml/metrics.py
+      params:
+        - ml
+      metrics:
+        - metrics/${item}/metrics.yaml
+  # fusion:
+  #   cmd: python src/late_fusion.py
+  #   deps:
+  #     - results/svm/
+  #   params:
+  #     - fusion
+  #     - ml
+  #   outs:
+  #     - results/fusion/
