@@ -15,7 +15,8 @@ data
 ├── features
 │  ├── audeep
 │  ├── deepspectrum
-│  └── opensmile
+│  ├── opensmile
+│  └── wav2vec
 ├── lab
 ├── raw
 │  └── wav
@@ -35,8 +36,8 @@ poetry run dvc repro
 ```
 
 ## Notes 
-If you want to reproduce the feature extraction follow the steps in the HC-C branch, using  HP-C. To avoid platform requirements, use the provided docker image. All parameters for feature extraction are given in `params.yaml`
+If you want to reproduce the feature extraction follow the steps in the HC-C branch. To avoid platform specific requirements, use the provided docker image. All parameters for feature extraction are given in `params.yaml` of this branch (`HP-C`).
 
-As it is only `wav2vec2` will run, running all experiements will take some time, but you can uncomment the `dvc.yaml` to do this. 
+Currently only `wav2vec2` will run, running all experiements will take some time, but you can uncomment the `dvc.yaml` to do this. 
 
 
