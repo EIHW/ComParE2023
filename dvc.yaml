@@ -44,6 +44,7 @@ stages:
     cmd: python src/visualisations/cm.py
     deps:
       - ./results
+      - ./data/lab
       - ./src/visualisations/cm.py
     outs:
       - ./visualisations/cms:
@@ -100,7 +101,8 @@ stages:
   fusion:
     cmd: python src/late_fusion.py
     deps:
-      - results/svm/
+      - results/svm
+      - results/wav2vec
       - ./src/late_fusion.py
     params:
       - fusion

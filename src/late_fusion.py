@@ -28,7 +28,7 @@ if __name__ == "__main__":
     metrics = {"devel": {}, "test": {}}
 
     all_devel_predictions = reduce(
-        lambda left, right: pd.merge(left, right, on=["filename", "true"]),
+        lambda left, right: pd.merge(left, right, on=["filename"]),
         [
             pd.read_csv(os.path.join(result_dir, "predictions.devel.csv"))
             for result_dir in result_dirs
@@ -37,13 +37,13 @@ if __name__ == "__main__":
     all_devel_predictions["prediction"] = all_devel_predictions[
         [p for p in all_devel_predictions.columns if "prediction" in p]
     ].agg(lambda x: Counter(x).most_common(1)[0][0], axis=1)
-    all_devel_predictions[["filename", "prediction", "true"]].to_csv(
+    all_devel_predictions[["filename", "prediction"]].to_csv(
         os.path.join(FUSION_RESULTS_PATH, "predictions.devel.csv"), index=False
     )
 
 
     all_test_predictions = reduce(
-        lambda left, right: pd.merge(left, right, on=["filename", "true"]),
+        lambda left, right: pd.merge(left, right, on=["filename"]),
         [
             pd.read_csv(os.path.join(result_dir, "predictions.test.csv"))
             for result_dir in result_dirs
@@ -52,6 +52,6 @@ if __name__ == "__main__":
     all_test_predictions["prediction"] = all_test_predictions[
         [p for p in all_test_predictions.columns if "prediction" in p]
     ].agg(lambda x: Counter(x).most_common(1)[0][0], axis=1)
-    all_test_predictions[["filename", "prediction", "true"]].to_csv(
+    all_test_predictions[["filename", "prediction"]].to_csv(
         os.path.join(FUSION_RESULTS_PATH, "predictions.test.csv"), index=False
     )

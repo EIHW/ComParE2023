@@ -1,16 +1,21 @@
 #!/usr/bin/env python
 # https://gist.github.com/hitvoice/36cf44689065ca9b927431546381a3f7
 from os import makedirs
-from posixpath import dirname, join, relpath
+from os.path import dirname, isfile, join, relpath
+
+import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib
+import yaml
+
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
+from glob import glob
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, recall_score
-from glob import glob
+
 
 def cm_analysis(y_true, y_pred, filename, labels, ymap=None, figsize=(10,10)):
     """
@@ -61,22 +66,29 @@ def cm_analysis(y_true, y_pred, filename, labels, ymap=None, figsize=(10,10)):
     plt.savefig(f"{filename}.png", dpi=600)
 
 if __name__=="__main__":
+    with open("params.yaml") as f:
+        target = yaml.load(f, Loader=yaml.FullLoader)["target"]
+    dev_true = pd.read_csv("./data/lab/devel.csv")
+    test_labels = "./data/lab/test.unmasked.csv" if isfile("./data/lab/test.unmasked.csv") else "./data/lab/test.csv"
+    test_true = pd.read_csv(test_labels)
     
     result_dir = f"./results"
     predictions = glob(f"{result_dir}/**/predictions*.csv", recursive=True)
     cm_dir = f"./visualisations/cms/"
     height = 5
     for p in predictions:
-        pred_df = pd.read_csv(p)
-        y = pred_df.true.values
+        pred_df = pd.read_csv(p)[["filename", "prediction"]]
         preds = pred_df.prediction.values
         _cm_dir = join(cm_dir, dirname(relpath(p, result_dir)))
         makedirs(_cm_dir, exist_ok=True)
         if "devel" in p:
             partition = "_devel"
+            pred_df = pd.merge(pred_df, dev_true)
         elif "test" in p:
             partition = "_test"
+            pred_df = pd.merge(pred_df, test_true)
         else:
             partition = ""
-        if len(set(pred_df.true.values)) > 1:
+        y = pred_df[target].values
+        if len(set(pred_df[target].values)) > 1:
             cm_analysis(y, preds, join(_cm_dir, f"cm{partition}"), sorted(set(y)), figsize=(height,height))
