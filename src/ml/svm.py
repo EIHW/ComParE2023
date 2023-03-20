@@ -3,6 +3,9 @@ import os
 import json
 import sys
 import yaml
+from pathlib import Path
+from os.path import join
+
 
 import audmetric
 import numpy as np
@@ -39,10 +42,18 @@ def make_dict_json_serializable(meta_dict: dict) -> dict:
 
 
 def load_features(feature_file, label_base):
-    labels = {
+    
+    test_file_exist = Path(join(label_base, "test.unmasked.csv"))
+    if test_file_exist.is_file():
+        labels = {
+        partition: pd.read_csv(f"{label_base}/{partition}.csv")
+        for partition in ["train", "devel", "test.unmasked"]
+        }
+    else: 
+        labels = {
         partition: pd.read_csv(f"{label_base}/{partition}.csv")
         for partition in ["train", "devel", "test"]
-    }
+        }
     feature_delimiter = ";" if "opensmile" in feature_file else ","
     df = pd.read_csv(feature_file, delimiter=feature_delimiter, quotechar="'")
     joined_dfs = {
@@ -52,8 +63,12 @@ def load_features(feature_file, label_base):
         for partition, _labels in labels.items()
     }
     train_devel_df = pd.concat([joined_dfs["train"], joined_dfs["devel"]])
-    test_df = joined_dfs["test"]
-    # subset of only specified groups and water rounds
+    if test_file_exist.is_file():
+        test_df = joined_dfs["test.unmasked"]
+    else: 
+        test_df = joined_dfs["test"]
+
+        # subset of only specified groups and water rounds
     feature_names = list(df.columns[1:])
     train_devel_names = train_devel_df.values[:, 0].tolist()
     train_devel_features = train_devel_df[feature_names].values
@@ -93,7 +108,7 @@ def run_svm(feature_folder, label_base, result_folder, metrics_folder, params):
                     "squared_epsilon_insensitive",
                 ],
                 "svm__estimator__C": np.logspace(-2, -6, num=5),
-                "svm__estimator__max_iter": [10000],
+                "svm__estimator__max_iter": [50000],
             }
         ]
     else:
@@ -154,9 +169,7 @@ def run_svm(feature_folder, label_base, result_folder, metrics_folder, params):
             "true": devel_y.tolist(),
         }
     )
-    df_predictions_devel.to_csv(
-        os.path.join(result_folder, "predictions.devel.csv"), index=False
-    )
+
 
     df_predictions_test = pd.DataFrame(
         {
@@ -165,15 +178,63 @@ def run_svm(feature_folder, label_base, result_folder, metrics_folder, params):
             "true": test_y.tolist(),
         }
     )
-    df_predictions_test.to_csv(
-        os.path.join(result_folder, "predictions.test.csv"), index=False
-    )
 
     with open(os.path.join(result_folder, "best_params.json"), "w") as f:
         json.dump(svm_params, f)
 
     pd.DataFrame(grid_search.cv_results_).to_csv(
         os.path.join(result_folder, "grid_search.csv"), index=False
+    )
+
+    devel_names = df_predictions_devel["filename"]
+
+    for label_type in ["true", "prediction"]:
+        if label_type == "true":
+            col_type = [str(i) + "_true" for i in COLUMN_NAMES]
+        if label_type == "prediction":
+            col_type = [str(i) + "_pred" for i in COLUMN_NAMES]
+        for index, row in df_predictions_devel.iterrows():
+            res = df_predictions_devel[label_type][index]
+            for res, col in zip(res, col_type):
+                df_predictions_devel.at[index, col] = float(res)
+        if label_type == "true":
+            devel_y = df_predictions_devel[col_type]
+        if label_type == "prediction":
+            devel_preds = df_predictions_devel[col_type]
+
+    test_names = df_predictions_test["filename"]
+
+    test_file_exist = Path(join(label_base, "test.unmasked.csv"))
+    if test_file_exist.is_file():
+        test_df = pd.read_csv(join(label_base, "test.unmasked.csv"))
+    else: 
+        print('No Test file, loading masked')
+        test_df = pd.read_csv(join(label_base, "test.csv"))
+    for label_type in ["true", "prediction"]:
+        if label_type == "true":
+            col_type = [str(i) + "_true" for i in COLUMN_NAMES]
+        if label_type == "prediction":
+            col_type = [str(i) + "_pred" for i in COLUMN_NAMES]
+
+        for index, row in df_predictions_test.iterrows():
+            res = df_predictions_test[label_type][index]
+            for res, col in zip(res, col_type):
+                if test_file_exist.is_file():
+                    df_predictions_test.at[index, col] = float(res)
+                else:
+                    df_predictions_test.at[index, col] = res
+        if label_type == "true":
+            test_y = df_predictions_test[col_type]
+        if label_type == "prediction":
+            test_preds = df_predictions_test[col_type]
+
+    df_predictions_devel = df_predictions_devel.drop(['prediction', 'true'],axis=1)
+    df_predictions_devel.to_csv(
+        os.path.join(result_folder, "predictions.devel.csv"), index=False
+    )
+    df_predictions_test = df_predictions_test.drop(['prediction', 'true'],axis=1)
+    df_predictions_test.to_csv(
+        os.path.join(result_folder, "predictions.test.csv"), index=False
     )
 
 
