@@ -22,6 +22,7 @@ datasets = "^2.8.0"
 evaluate = "^0.4.0"
 pycm = "^3.7"
 audmetric = "^1.1.6"
+pathlib = "^1.0.1"
 
 [tool.poetry.dev-dependencies]
 black = "^22.6.0"
